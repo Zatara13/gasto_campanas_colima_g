@@ -1,39 +1,39 @@
-## Gasto en campaÒas
+## Gasto en campa√±as
 ## Por Jorge Ruizvisfocri
 
-## Cargamos librerÌas de trabajo
+## Cargamos librer√≠as de trabajo
 library(readr) ## Abrir bases de datos csv
 library(tidyverse) ## Manipular bases de datos
-library(ggsci) ## Colores bonitos para las gr·ficas
-library(ggthemes) ## Colores bonitos para las gr·ficas
+library(ggsci) ## Colores bonitos para las gr√°ficas
+library(ggthemes) ## Colores bonitos para las gr√°ficas
 
 ## Cargamos la base de datos
 gastos_g <- read.csv(file = "https://raw.githubusercontent.com/Zatara13/gasto_campanas_colima_g/main/PELO_20-21_CAMPA%C3%91A_G_RUBRO_210415.csv")
-## Filtramos para Colima, seleccionamos cargo a la gubernatura y seleccionamos variables de interÈs
+## Filtramos para Colima, seleccionamos cargo a la gubernatura y seleccionamos variables de inter√©s
 gastos_c <- gastos_g %>% ## Llamamos base de datos
   filter(ESTADO.ELECCION == "COLIMA" &  ## Seleccionamos el estado
            CARGO == "GOBERNADOR ESTATAL") %>%  ## Seleccionamos el cargo
-  ## Seleccionamos variables de interÈs, para no tener la base de datos completa
+  ## Seleccionamos variables de inter√©s, para no tener la base de datos completa
   select(NOMBRE.COMPLETO, ## Nombre del Candidato
          FINANCIEROS, ## Gastos financieros
-         OPERATIVOS.DE.LA.CAMPA—A, ## Gastos operativos
-         PRODUCCI”N.DE.LOS.MENSAJES.PARA.RADIO.Y.T.V., ## ProducciÛn de spots
+         OPERATIVOS.DE.LA.CAMPA√ëA, ## Gastos operativos
+         PRODUCCI√ìN.DE.LOS.MENSAJES.PARA.RADIO.Y.T.V., ## Producci√≥n de spots
          PROPAGANDA, ## Propaganda
          PROPAGANDA.EN.DIARIOS..REVISTAS.Y.OTROS.MEDIOS.IMPRESOS, ## Propaganda en medios impresos
-         PROPAGANDA.EN.VÕA.P⁄BLICA, ## Propaganda en vÌa p˙blica
-         PROPAGANDA.EXHIBIDA.EN.P¡GINAS.DE.INTERNET, ## Propaganda en internet
+         PROPAGANDA.EN.V√çA.P√öBLICA, ## Propaganda en v√≠a p√∫blica
+         PROPAGANDA.EXHIBIDA.EN.P√ÅGINAS.DE.INTERNET, ## Propaganda en internet
          PROPAGANDA.UTILITARIA) %>%   ## Total de gastos
   ## Renombramos las variables para trabajar con mayor facilidad
   rename(candidato = NOMBRE.COMPLETO,
          financieros = FINANCIEROS,
-         gasto_operativo = OPERATIVOS.DE.LA.CAMPA—A,
-         produccion_spots = PRODUCCI”N.DE.LOS.MENSAJES.PARA.RADIO.Y.T.V.,
+         gasto_operativo = OPERATIVOS.DE.LA.CAMPA√ëA,
+         produccion_radio_tv = PRODUCCI√ìN.DE.LOS.MENSAJES.PARA.RADIO.Y.T.V.,
          propaganda = PROPAGANDA,
          medios_impresos = PROPAGANDA.EN.DIARIOS..REVISTAS.Y.OTROS.MEDIOS.IMPRESOS,
-         en_via_publica = PROPAGANDA.EN.VÕA.P⁄BLICA,
-         internet = PROPAGANDA.EXHIBIDA.EN.P¡GINAS.DE.INTERNET,
+         en_via_publica = PROPAGANDA.EN.V√çA.P√öBLICA,
+         internet = PROPAGANDA.EXHIBIDA.EN.P√ÅGINAS.DE.INTERNET,
          utilitaria = PROPAGANDA.UTILITARIA) %>% ## Propaganda utilitaria
-  ## Agrupamos las variables en una de conceptos y otra de gastos, para trabajar con m·s facilidad
+  ## Agrupamos las variables en una de conceptos y otra de gastos, para trabajar con m√°s facilidad
   gather(concepto, gasto, financieros:utilitaria) %>%
   ## Organizamos las columnas
   select(candidato,
@@ -42,46 +42,46 @@ gastos_c <- gastos_g %>% ## Llamamos base de datos
   ## Transformamos de NA (sin valor) a 0, asumiendo que no han gastado en eso (o no lo han reportado)
   mutate(gasto = replace_na(gasto,0)) %>%
   ## Conseguimos los gastos por candidato
-  ## Debido a que la candidatura de Indira VizcaÌno es una candidatura com˙n, sumamos los gastos de Nueva Alianza y Morena
+  ## Debido a que la candidatura de Indira Vizca√≠no es una candidatura com√∫n, sumamos los gastos de Nueva Alianza y Morena
   group_by(candidato, concepto) %>%  
   summarise(gasto = sum(gasto)) %>% 
   mutate(concepto = as.factor(concepto))
-rm(gastos_g) ## Limpiamos el ·rea de trabajo
+rm(gastos_g) ## Limpiamos el √°rea de trabajo
 
-## VisualizaciÛn cu·nto y en quÈ est·n gastando los candidatos
+## Visualizaci√≥n cu√°nto y en qu√© est√°n gastando los candidatos
 ggplot(gastos_c %>% 
-         mutate(candidato = fct_relevel(candidato, ## Seleccionamos el orden de m·s gasto a menos gasto
+         mutate(candidato = fct_relevel(candidato, ## Seleccionamos el orden de m√°s gasto a menos gasto
                                         "LEONCIO ALFONSO MORAN SANCHEZ",
                                         "VIRGILIO MENDOZA AMEZCUA",
-                                        "CLAUDIA VALERIA YA—EZ CENTENO Y CABRERA",
+                                        "CLAUDIA VALERIA YA√ëEZ CENTENO Y CABRERA",
                                         "INDIRA VIZCAINO SILVA",
                                         "MELY ROMERO CELIS",
                                         "AURORA ILEANA CRUZ ALCARAZ"),
                 gasto = gasto / 1000), ## Configuramos el eje en miles de pesos
-       aes(x = candidato, ## Seleccionamos variables de interÈs
+       aes(x = candidato, ## Seleccionamos variables de inter√©s
            y = gasto,
            fill = concepto))+
-  theme_bw()+ ## Se ven elegantes las gr·ficas
-  geom_bar(stat = "identity", ## Seleccionamos gr·fica de barras
-           position = "stack")+ ## Este par·metro nos permite apilar los gastos
-  scale_fill_few(labels = c("Publicidad en vÌa p˙blica", ## Le ponemos nombre a los gastos y seleccionamos la paleta few
+  theme_bw()+ ## Se ven elegantes las gr√°ficas
+  geom_bar(stat = "identity", ## Seleccionamos gr√°fica de barras
+           position = "stack")+ ## Este par√°metro nos permite apilar los gastos
+  scale_fill_few(labels = c("Publicidad en v√≠a p√∫blica", ## Le ponemos nombre a los gastos y seleccionamos la paleta few
                             "Financieros",
                             "Gasto Operativo",
-                            "P·ginas de internet",
+                            "P√°ginas de internet",
                             "Medios Impresos",
-                            "ProducciÛn de Spots",
+                            "Producci√≥n para radio y tv",
                             "Propaganda general",
                             "Propaganda utilitaria"),
                  palette = "Dark")+ ## Seleccionamos la paleta oscura
-  labs(title = "Gastos en las campaÒas 2021 en Colima", ## Ponemos etiquetas a cosas
+  labs(title = "Gastos en las campa√±as 2021 en Colima", ## Ponemos etiquetas a cosas
        subtitle = "Desglose de los gastos de los candidatos a la gobernatura de Colima",
        x = "Nombre de la candidata",
        y = "Miles de pesos",
-       caption = "Fuente: Datos abiertos de fiscalizaciÛn del INE.
-       Nota: La fecha de corte de los datos de la gr·fica es 15/04/2021.
+       caption = "Fuente: Datos abiertos de fiscalizaci√≥n del INE.
+       Nota: La fecha de corte de los datos de la gr√°fica es 15/04/2021.
        @jkvisfocri")
 
-## Vemos el grado de contaminaciÛn de los gastos
+## Vemos el grado de contaminaci√≥n de los gastos
 nivel_contaminacion <- data.frame(concepto = as.factor(c("en_via_publica", ## Armamos una base de datos con la variable de concepto
                                          "financieros",
                                          "gasto_operativo",
@@ -90,7 +90,7 @@ nivel_contaminacion <- data.frame(concepto = as.factor(c("en_via_publica", ## Ar
                                          "produccion_spots",
                                          "propaganda",
                                          "utilitaria")),
-                            grado_contaminacion = as.factor(c("contaminante", ## Le asignamos una de las categorÌas de contaminaciÛn a cada concepto
+                            grado_contaminacion = as.factor(c("contaminante", ## Le asignamos una de las categor√≠as de contaminaci√≥n a cada concepto
                                                     "no tan contaminante",
                                                     "no tan contaminante",
                                                     "no tan contaminante",
@@ -98,26 +98,26 @@ nivel_contaminacion <- data.frame(concepto = as.factor(c("en_via_publica", ## Ar
                                                     "no tan contaminante",
                                                     "contaminante",
                                                     "contaminante")))
-## Unimos las etiquetas de contaminaciÛn a sus correspondientes conceptos en la base de datos de gastos
+## Unimos las etiquetas de contaminaci√≥n a sus correspondientes conceptos en la base de datos de gastos
 gastos_c <- merge(gastos_c,
                   nivel_contaminacion,
                   by = "concepto")
-## Hacemos un resumen de los gastos por concepto de contaminaciÛn
+## Hacemos un resumen de los gastos por concepto de contaminaci√≥n
 gasto_contaminacion <- gastos_c %>% ## Llamamos la base de datos
   ungroup() %>%  ## Desagrupamos
-  group_by(candidato, ## Agrupamos variables de interÈs
+  group_by(candidato, ## Agrupamos variables de inter√©s
            grado_contaminacion) %>%
-  summarise(gasto = sum(gasto)) %>%  ## Resumimos la informaciÛn de los gastos por concepto
+  summarise(gasto = sum(gasto)) %>%  ## Resumimos la informaci√≥n de los gastos por concepto
   ungroup() %>%  ## Desagrupamos
   group_by(candidato) %>%  ## Agrupamos por candidato
   mutate(total = sum(gasto)) %>% ## Generamos el total de gastos por candidato en una nueva variable
-  mutate(pct = gasto / total * 100) ## Creamos una nueva variable de porcentaje por grado de contaminaciÛn
+  mutate(pct = gasto / total * 100) ## Creamos una nueva variable de porcentaje por grado de contaminaci√≥n
 
-## VisualizaciÛn cu·nto y en quÈ est·n gastando los candidatos
+## Visualizaci√≥n cu√°nto y en qu√© est√°n gastando los candidatos
 ## Graficamos el gasto en conceptos contaminantes
 ggplot(gasto_contaminacion %>% ## Llamamos base de datos
-         mutate(candidato = fct_relevel(candidato, ## Ordenamos los candidatos, de quien ha gastado en m·s publicidad contaminante a quien ha gastado menos
-                                        "CLAUDIA VALERIA YA—EZ CENTENO Y CABRERA",
+         mutate(candidato = fct_relevel(candidato, ## Ordenamos los candidatos, de quien ha gastado en m√°s publicidad contaminante a quien ha gastado menos
+                                        "CLAUDIA VALERIA YA√ëEZ CENTENO Y CABRERA",
                                         "LEONCIO ALFONSO MORAN SANCHEZ",
                                         "MELY ROMERO CELIS",
                                         "INDIRA VIZCAINO SILVA",
@@ -126,19 +126,19 @@ ggplot(gasto_contaminacion %>% ## Llamamos base de datos
                 grado_contaminacion = fct_relevel(grado_contaminacion,
                                                   "no tan contaminante",
                                                   "contaminante")),
-       aes(x = candidato, ## Seleccionamos variables de interÈs
+       aes(x = candidato, ## Seleccionamos variables de inter√©s
            y = pct,
            fill = grado_contaminacion))+
-  theme_bw()+ ## Est· elegante este tema
-  geom_bar(stat = "identity", ## Gr·fica de barras
+  theme_bw()+ ## Est√° elegante este tema
+  geom_bar(stat = "identity", ## Gr√°fica de barras
            position = "stack")+ ## Agrupamos conceptos uno sobre el otro
   scale_fill_wsj(palette = "red_green")+ ## Seleccionamos estos colores, porque vienen en orden rojo - azul - verde
-  labs(title = "Gastos en las campaÒas 2021 en Colima", ## Ponemos etiquetas y leyendas adecuadas
-       subtitle = "Porcentaje del gasto de campaÒa en conceptos contaminantes",
-       fill = "Grado de contaminaciÛn",
+  labs(title = "Gastos en las campa√±as 2021 en Colima", ## Ponemos etiquetas y leyendas adecuadas
+       subtitle = "Porcentaje del gasto de campa√±a en conceptos contaminantes",
+       fill = "Grado de contaminaci√≥n",
        x = "Nombre de la candidata",
        y = "Porcentaje",
-       caption = "Fuente: Datos abiertos de fiscalizaciÛn del INE.
-       Nota 1: La fecha de corte de los datos de la gr·fica es 15/04/2021.
-       Nota 2: Se considera como contaminante la publicidad en espectaculares, medios impresos, utilitaria y en general. Se considera no tan contaminante la el gasto financiero, en portales de internet,la producciÛn de spots y los gastos operativos.
+       caption = "Fuente: Datos abiertos de fiscalizaci√≥n del INE.
+       Nota 1: La fecha de corte de los datos de la gr√°fica es 15/04/2021.
+       Nota 2: Se considera como contaminante la publicidad en espectaculares, medios impresos, utilitaria y en general. Se considera no tan contaminante la el gasto financiero, en portales de internet,la producci√≥n de spots y los gastos operativos.
        @jkvisfocri")
