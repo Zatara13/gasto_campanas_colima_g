@@ -7,6 +7,9 @@ library(tidyverse) ## Manipular bases de datos
 library(ggsci) ## Colores bonitos para las gráficas
 library(ggthemes) ## Colores bonitos para las gráficas
 
+## Los datos los obtenemos del apartado de los datos abiertos de campañas del ámbito local de la página de rendición de cuentas del INE.
+## Disponibles en https://fiscalizacion.ine.mx/web/portalsif/descarga-de-reportes
+
 ## Cargamos la base de datos
 gastos_g <- read.csv(file = "https://raw.githubusercontent.com/Zatara13/gasto_campanas_colima_g/main/PELO_20-21_CAMPA%C3%91A_G_RUBRO_210415.csv")
 ## Filtramos para Colima, seleccionamos cargo a la gubernatura y seleccionamos variables de interés
@@ -39,17 +42,18 @@ gastos_c <- gastos_g %>% ## Llamamos base de datos
   select(candidato,
          concepto,
          gasto) %>% 
-  ## Transformamos de NA (sin valor) a 0, asumiendo que no han gastado en eso (o no lo han reportado)
+  ## Transformamos de NA (sin valor) a 0, asumiendo que no han gastado en eso (o no lo han reportado los muy pillos)
   mutate(gasto = replace_na(gasto,0)) %>%
   ## Conseguimos los gastos por candidato
   ## Debido a que la candidatura de Indira Vizcaíno es una candidatura común, sumamos los gastos de Nueva Alianza y Morena
-  group_by(candidato, concepto) %>%  
+  group_by(candidato,
+           concepto) %>%  
   summarise(gasto = sum(gasto)) %>% 
   mutate(concepto = as.factor(concepto))
 rm(gastos_g) ## Limpiamos el área de trabajo
 
 ## Visualización cuánto y en qué están gastando los candidatos
-ggplot(gastos_c %>% 
+ggplot(gastos_c %>%
          mutate(candidato = fct_relevel(candidato, ## Seleccionamos el orden de más gasto a menos gasto
                                         "LEONCIO ALFONSO MORAN SANCHEZ",
                                         "VIRGILIO MENDOZA AMEZCUA",
@@ -58,13 +62,13 @@ ggplot(gastos_c %>%
                                         "MELY ROMERO CELIS",
                                         "AURORA ILEANA CRUZ ALCARAZ"),
                 gasto = gasto / 1000), ## Configuramos el eje en miles de pesos
-       aes(x = candidato, ## Seleccionamos variables de interés
-           y = gasto,
-           fill = concepto))+
+       aes(x = candidato, ## Seleccionamos variable de interés para el eje x
+           y = gasto, ## seleccionamos variable de interés para el eje y
+           fill = concepto))+ ## Diferenciamos el gasto por concepto
   theme_bw()+ ## Se ven elegantes las gráficas
   geom_bar(stat = "identity", ## Seleccionamos gráfica de barras
            position = "stack")+ ## Este parámetro nos permite apilar los gastos
-  scale_fill_few(labels = c("Publicidad en vía pública", ## Le ponemos nombre a los gastos y seleccionamos la paleta few
+  scale_fill_few(labels = c("Publicidad en vía pública", ## Le ponemos nombre a los gastos
                             "Financieros",
                             "Gasto Operativo",
                             "Páginas de internet",
@@ -82,12 +86,19 @@ ggplot(gastos_c %>%
        @jkvisfocri")
 
 ## Vemos el grado de contaminación de los gastos
+## La asignación del grado de contaminación es a discreción mía, por lo que es un criterio perfectamente debatible.
+## Asumí que la publicidad que termina en algún tipo de textil o plástico es un producto inutil y contaminante.
+## En esa categoría entra la publicidad utilitaria (textiles: gorras, chalecos, banderines, etc), general (es algo así como otros, pero ahí suelen englobarse lonas, caballetes, folletos y papelitos)
+## en vía pública (los espectaculares), medios impresos (periódicos y revistas)
+## En la categoría de no tan contaminante, pensé en cosas cuya huella ambiental podría no ser tan fuerte: operativos (es pago de brigadistas, los que asumimos que hacen campaña con sus dotes de persuasión)
+## Propaganda en internet, financieros (comisiones bancarias) y producción de spots para radio y televisión.
+
 nivel_contaminacion <- data.frame(concepto = as.factor(c("en_via_publica", ## Armamos una base de datos con la variable de concepto
                                          "financieros",
                                          "gasto_operativo",
                                          "internet",
                                          "medios_impresos",
-                                         "produccion_spots",
+                                         "produccion_radio_tv",
                                          "propaganda",
                                          "utilitaria")),
                             grado_contaminacion = as.factor(c("contaminante", ## Le asignamos una de las categorías de contaminación a cada concepto
@@ -98,10 +109,12 @@ nivel_contaminacion <- data.frame(concepto = as.factor(c("en_via_publica", ## Ar
                                                     "no tan contaminante",
                                                     "contaminante",
                                                     "contaminante")))
+
 ## Unimos las etiquetas de contaminación a sus correspondientes conceptos en la base de datos de gastos
 gastos_c <- merge(gastos_c,
                   nivel_contaminacion,
                   by = "concepto")
+
 ## Hacemos un resumen de los gastos por concepto de contaminación
 gasto_contaminacion <- gastos_c %>% ## Llamamos la base de datos
   ungroup() %>%  ## Desagrupamos
@@ -140,5 +153,5 @@ ggplot(gasto_contaminacion %>% ## Llamamos base de datos
        y = "Porcentaje",
        caption = "Fuente: Datos abiertos de fiscalización del INE.
        Nota 1: La fecha de corte de los datos de la gráfica es 15/04/2021.
-       Nota 2: Se considera como contaminante la publicidad en espectaculares, medios impresos, utilitaria y en general. Se considera no tan contaminante la el gasto financiero, en portales de internet,la producción de spots y los gastos operativos.
+       Nota 2: Se considera como contaminante la publicidad en espectaculares, medios impresos, utilitaria y en general. Se considera no tan contaminante los gastos financieros, publicidad en portales de internet, producción de spots y gastos operativos.
        @jkvisfocri")
